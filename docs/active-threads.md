@@ -10,6 +10,7 @@ Current work threads and their status for the nlt-otoi repository.
 
 | Thread | Owner | Status | Branch | Description |
 |--------|-------|--------|--------|-------------|
+| Repo cleanup: archive legacy Python, rewrite docs | swe | in progress | `cleanup/nlt-otoi-legacy-archive` | Archive legacy Python-era files to `legacy/`, rewrite README to document both npm/PyPI APIs, mark stale docs deprecated, clean build artifacts |
 | License maintenance docs follow-up | cursor | pending review | `cursor/engineering-documentation-updates-f979` | Closes stale PR #38 thread state and extends license maintenance docs with changelog, metadata, nested docs, and PR checklist guidance |
 
 ## Completed
