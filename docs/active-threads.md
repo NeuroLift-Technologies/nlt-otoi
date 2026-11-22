@@ -10,7 +10,7 @@ Current work threads and their status for the nlt-otoi repository.
 
 | Thread | Owner | Status | Branch | Description |
 |--------|-------|--------|--------|-------------|
-| OTOI archive retirement | codex | pending review | `codex/retire-otoi-archive` | Retire superseded files under `legacy/` and preserve the live landing page and Solidarity Kit manifest. Next action: review the archive retirement PR. |
+| OTOI archive retirement | codex | pending review | `codex/retire-otoi-archive` | Retire superseded files under `legacy/` and preserve the live landing page and Solidarity Kit manifest. Next action: review [PR #52](https://github.com/NeuroLift-Technologies/nlt-otoi/pull/52). |
 
 ## Completed
 

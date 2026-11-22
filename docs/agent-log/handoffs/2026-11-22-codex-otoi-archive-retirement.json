@@ -36,6 +36,6 @@
       "38 Python tests, sdist and wheel builds, package comparisons and wheel import"
     ],
     "tests_passing": true,
-    "pr_url": null
+    "pr_url": "https://github.com/NeuroLift-Technologies/nlt-otoi/pull/52"
   }
 }
