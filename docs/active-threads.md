@@ -10,14 +10,14 @@ Current work threads and their status for the nlt-otoi repository.
 
 | Thread | Owner | Status | Branch | Description |
 |--------|-------|--------|--------|-------------|
-| Repo cleanup: archive legacy Python, rewrite docs | swe | in progress | `cleanup/nlt-otoi-legacy-archive` | Archive legacy Python-era files to `legacy/`, rewrite README to document both npm/PyPI APIs, mark stale docs deprecated, clean build artifacts |
-| License maintenance docs follow-up | cursor | pending review | `cursor/engineering-documentation-updates-f979` | Closes stale PR #38 thread state and extends license maintenance docs with changelog, metadata, nested docs, and PR checklist guidance |
-| OTOI archive retirement | codex | in progress | `codex/retire-otoi-archive` | Retire superseded files under `legacy/` and preserve the live landing page and Solidarity Kit manifest. Next action: verify package artifacts and prepare the draft PR. |
+| OTOI archive retirement | codex | pending review | `codex/retire-otoi-archive` | Retire superseded files under `legacy/` and preserve the live landing page and Solidarity Kit manifest. Next action: review the archive retirement PR. |
 
 ## Completed
 
 | Thread | Owner | Merged | PR | Description |
 |--------|-------|--------|-----|-------------|
+| Repo cleanup: archive legacy Python, rewrite docs | swe | ✅ | [#49](https://github.com/NeuroLift-Technologies/nlt-otoi/pull/49) | Archived Python-era files and updated README for npm and PyPI APIs. |
+| License maintenance docs follow-up | cursor | ✅ | [#39](https://github.com/NeuroLift-Technologies/nlt-otoi/pull/39) | Extended license maintenance guidance for changelog, metadata, nested docs, and PRs. |
 | PR #40 license/package docs follow-up | cursor | ✅ | #41 | Aligned developer runbooks with merged Apache-2.0 relicense, the new `packages/otoi/LICENSE`, and `@neurolift-technologies/otoi` 1.1.0 package metadata/release checks |
 | Relicense to Apache-2.0 | claude | ✅ | #40 | Relicensed OTOI from MIT to Apache-2.0 across root, nested `nlt-otoi/`, and the new `packages/otoi/LICENSE`; bumped `@neurolift-technologies/otoi` to 1.1.0. npm publish deferred to post-merge |
 | License maintenance runbook follow-up | cursor | ✅ | #38 | Added source-verified operational runbook details for auditing license-bearing docs, package metadata, nested license copy, and integration metadata |
