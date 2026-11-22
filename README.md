@@ -122,17 +122,12 @@ The **OTOI (Operational / Orchestrated Terms of Interaction)** framework is an o
 ├── development-process.md    # Contributor runbooks
 └── escalations/              # Escalation records
 
-/legacy/              # Archived Python-era artifacts (deprecated)
-├── DEPRECATED.md     # Archive index with migration guide
-├── nlt-otoi/         # Vendored copy (superseded)
-├── examples/neuroLift/  # Old Python examples
-├── schemas/          # Deprecated JSON schemas
-├── templates/        # Deprecated templates
-├── docs/             # Stale framework docs (marked deprecated)
-├── *.py, *.yaml, *.json, *.md  # Various legacy files
+/legacy/              # Cloudflare Workers assets
+├── index.html
+└── agent-solidarity-kit.json
 
 /tests/               # Cross-package conformance tests
-wrangler.jsonc        # Cloudflare Workers config (serves legacy/index.html)
+wrangler.jsonc        # Cloudflare Workers configuration
 CHANGELOG.md          # Version history
 LICENSE               # Apache-2.0
 ```
@@ -194,7 +189,7 @@ from nlt_otoi.schema import TOISchema, HandoffSchema, IntentLogSchema
 | `packages/otoi/SPEC.md` | ✅ Current | npm package API specification |
 | `packages/otoi/README.md` | ✅ Current | npm package documentation |
 | `src/nlt_otoi/__init__.py` | ✅ Current | PyPI package API (docstrings) |
-| `legacy/docs/*.md` | ⚠️ Archived | Stale Python-era docs (see `legacy/DEPRECATED.md`) |
+| [Python-era archive](https://github.com/NeuroLift-Technologies/nlt-otoi/tree/036c8c0e3bb67f733a4239418a5011b137c589f9/legacy) | Archived | Historical docs, examples, schemas, and templates at the last commit before retirement |
 
 ---
 

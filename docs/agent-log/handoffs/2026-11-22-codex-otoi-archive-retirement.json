@@ -1,0 +1,41 @@
+{
+  "handoff_record": {
+    "session_id": "codex-nlt-otoi-archive-retirement-2026-11-22",
+    "agent_name": "Codex",
+    "date": "2026-11-22",
+    "otoi_version": "ORG-DEV-OTOI-1.0.2",
+    "repo": "NeuroLift-Technologies/nlt-otoi",
+    "branch": "codex/retire-otoi-archive",
+    "work_completed": [
+      "Retired 54 superseded files and linked the last archived revision from README.md.",
+      "Moved merged PRs #49 and #39 to Completed in the thread register."
+    ],
+    "work_in_progress": [
+      "Draft PR review"
+    ],
+    "blockers": [],
+    "decisions_made": [
+      "Keep legacy/index.html and legacy/agent-solidarity-kit.json because the Cloudflare endpoints serve those assets.",
+      "Limit deletion to legacy/ and preserve the separate PR #51 template changes."
+    ],
+    "decisions_pending": [
+      "Handle any future Workers deployment separately. Removed archive URLs will cease to be served from this tree after deployment, and the currently live root manifest URL has no corresponding root file on main."
+    ],
+    "escalations": [],
+    "next_agent_notes": "Review the package comparisons and confirm the deployment implications before any future Workers deployment. Historical files remain at 036c8c0e3bb67f733a4239418a5011b137c589f9.",
+    "files_modified": [
+      "README.md",
+      "docs/active-threads.md",
+      "docs/agent-log/registrations/2026-11-22-codex-otoi-archive-retirement.json",
+      "docs/agent-log/handoffs/2026-11-22-codex-otoi-archive-retirement.json",
+      "legacy/ (54 deletions)"
+    ],
+    "tests_run": [
+      "Governance validation and git diff --check",
+      "22 npm tests, type check, build, package comparison and import",
+      "38 Python tests, sdist and wheel builds, package comparisons and wheel import"
+    ],
+    "tests_passing": true,
+    "pr_url": "https://github.com/NeuroLift-Technologies/nlt-otoi/pull/52"
+  }
+}
