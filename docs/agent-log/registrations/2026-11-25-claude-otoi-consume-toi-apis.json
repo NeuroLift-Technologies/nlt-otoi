@@ -1,0 +1,24 @@
+{
+  "agent_registration": {
+    "agent_name": "Claude",
+    "platform": "Claude Code (claude.ai/code)",
+    "version": "Not recorded in repository artifacts",
+    "session_id": "claude-nlt-otoi-consume-toi-apis-2026-11-25",
+    "entry_date": "2026-11-25",
+    "entry_point": "Joshua asked for a verification analysis of a supplied otoi 1.2.0 probe, then directed that otoi, which consumes the toi package, should use the toi package's APIs",
+    "acknowledged_otoi": true,
+    "otoi_version": "ORG-DEV-OTOI-1.0.2",
+    "working_repo": "NeuroLift-Technologies/nlt-otoi",
+    "working_branch": "ccr-7a1dfdaf-cxo6zh",
+    "capabilities_self_reported": [
+      "npm and PyPI package verification against repository source",
+      "TypeScript and Python test-driven changes",
+      "governance validation"
+    ],
+    "known_limitations": [
+      "Could not read the private organization governance documents linked from CLAUDE.md",
+      "Package releases and architecture decisions require Joshua's approval"
+    ],
+    "preferred_handoff_format": "Repository handoff JSON"
+  }
+}

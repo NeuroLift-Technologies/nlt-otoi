@@ -10,12 +10,13 @@ Current work threads and their status for the nlt-otoi repository.
 
 | Thread | Owner | Status | Branch | Description |
 |--------|-------|--------|--------|-------------|
-| OTOI archive retirement | codex | pending review | `codex/retire-otoi-archive` | Retire superseded files under `legacy/` and preserve the live landing page and Solidarity Kit manifest. Next action: review [PR #52](https://github.com/NeuroLift-Technologies/nlt-otoi/pull/52). |
+| otoi consumes the toi APIs | claude | pending review | `ccr-7a1dfdaf-cxo6zh` | npm and Python ports use toi `canonicalize`, `parseToi`, `verifyToi`, `compareTier`, and `TOI_RESERVED_PREFIX` instead of local copies; fixes two leaf-equality bugs. Next action: review [PR #53](https://github.com/NeuroLift-Technologies/nlt-otoi/pull/53) and decide the open escalations listed there (same-tier override, privacy floor). |
 
 ## Completed
 
 | Thread | Owner | Merged | PR | Description |
 |--------|-------|--------|-----|-------------|
+| OTOI archive retirement | codex | ✅ | [#52](https://github.com/NeuroLift-Technologies/nlt-otoi/pull/52) | Retired superseded files under `legacy/`, preserving the live landing page and Solidarity Kit manifest. |
 | Repo cleanup: archive legacy Python, rewrite docs | swe | ✅ | [#49](https://github.com/NeuroLift-Technologies/nlt-otoi/pull/49) | Archived Python-era files and updated README for npm and PyPI APIs. |
 | License maintenance docs follow-up | cursor | ✅ | [#39](https://github.com/NeuroLift-Technologies/nlt-otoi/pull/39) | Extended license maintenance guidance for changelog, metadata, nested docs, and PRs. |
 | PR #40 license/package docs follow-up | cursor | ✅ | #41 | Aligned developer runbooks with merged Apache-2.0 relicense, the new `packages/otoi/LICENSE`, and `@neurolift-technologies/otoi` 1.1.0 package metadata/release checks |
