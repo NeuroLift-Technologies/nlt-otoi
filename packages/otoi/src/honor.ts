@@ -2,16 +2,24 @@
  * The `.otoi` honoring layer.
  *
  * This is what makes `.otoi` more than a second copy of `.toi`: it consumes the
- * canonical `@neurolift-technologies/toi` primitives (`parseToi`, `resolveToi`) to turn a
- * charter plus a stack of `.toi` documents into one **effective interaction
- * policy** that every agent in the mesh honors — and it adds the orchestration
- * concerns the `.toi` standard deliberately leaves out: same-tier conflict
- * detection, enforcement modes, and per-agent propagation.
+ * canonical `@neurolift-technologies/toi` package to turn a charter plus a stack
+ * of `.toi` documents into one **effective interaction policy** that every agent
+ * in the mesh honors. Everything about the `.toi` format itself — validation
+ * (`parseToi`), signatures (`isSigned`, `verifyToi`), value equality
+ * (`canonicalize`), tier order (`compareTier`, `resolveToi`), and the reserved
+ * key prefix — comes from that package rather than a local copy. This module
+ * adds only the orchestration concerns the `.toi` standard deliberately leaves
+ * out: same-tier conflict detection, enforcement modes, and per-agent
+ * propagation.
  */
 import {
+  canonicalize,
+  compareTier,
+  isSigned,
   parseToi,
   resolveToi,
-  TIER_RANK,
+  TOI_RESERVED_PREFIX,
+  verifyToi,
   type ToiDocument,
   type ToiTier,
 } from "@neurolift-technologies/toi";
@@ -45,7 +53,11 @@ const DEFAULT_ENFORCEMENT: ResolvedEnforcement = {
 
 /** Options for {@link honor}. */
 export interface HonorOptions {
-  /** Already-parsed `.toi` documents to fold in alongside the charter's sources. */
+  /**
+   * `.toi` documents to fold in alongside the charter's sources. Each is
+   * validated with `parseToi` and, if signed, checked with `verifyToi`, exactly
+   * like a charter source.
+   */
   documents?: readonly ToiDocument[];
   /** Lowest-precedence fallback values, applied only where nothing else set a field. */
   platformDefaults?: Record<string, unknown>;
@@ -135,9 +147,12 @@ export function detectConflicts(documents: readonly ToiDocument[]): PolicyConfli
  *
  * @throws {OtoiCompatibilityError} when the installed `@neurolift-technologies/toi` declares
  *   no valid format version (a broken or pre-`1.0.1` install).
+ * @throws {ToiParseError | ToiValidationError} when a charter source or a host
+ *   document in `options.documents` is not a valid `.toi` document (`parseToi`).
  * @throws {OtoiHonorError} when there is nothing to resolve, when a `uri` source
- *   is present without a `loadSource`, or when a same-tier conflict is found
- *   under `on_conflict: "reject"`.
+ *   is present without a `loadSource`, when a signed document's `$signature`
+ *   does not verify (`verifyToi`), or when a same-tier conflict is found under
+ *   `on_conflict: "reject"`.
  */
 export async function honor(input: OtoiCharter | unknown, options: HonorOptions = {}): Promise<EffectivePolicy> {
   // Fail closed if the installed `.toi` package declares no usable format
@@ -216,10 +231,28 @@ async function gatherDocuments(charter: OtoiCharter, options: HonorOptions): Pro
         `toi_source declares tier "${source.tier}" but its ${origin} has $tier "${doc.$tier}"`,
       );
     }
+    assertSignatureVerifies(doc, source.uri !== undefined ? `uri "${source.uri}"` : "inline toi_source");
     docs.push(doc);
   }
-  for (const doc of options.documents ?? []) docs.push(doc);
+  // Host-supplied documents get the same `.toi` validation and signature check
+  // as charter sources: there is one validator for the `.toi` shape.
+  for (const [index, input] of (options.documents ?? []).entries()) {
+    const doc = parseToi(input);
+    assertSignatureVerifies(doc, `options.documents[${index}]`);
+    docs.push(doc);
+  }
   return docs;
+}
+
+/**
+ * A signed document must verify. Unsigned documents are accepted, as before;
+ * a `$signature` that is present but does not verify means the document was
+ * altered after signing (or signed with a malformed envelope), so fail closed.
+ */
+function assertSignatureVerifies(doc: ToiDocument, origin: string): void {
+  if (isSigned(doc) && !verifyToi(doc)) {
+    throw new OtoiHonorError(`The $signature on ${origin} does not verify; the document may have been altered`);
+  }
 }
 
 function resolveEnforcement(e: OtoiEnforcement | undefined): ResolvedEnforcement {
@@ -234,7 +267,7 @@ function resolveEnforcement(e: OtoiEnforcement | undefined): ResolvedEnforcement
 function uniqueTiersByPrecedence(docs: readonly ToiDocument[]): ToiTier[] {
   const set = new Set<ToiTier>();
   for (const doc of docs) set.add(doc.$tier);
-  return [...set].sort((a, b) => TIER_RANK[a] - TIER_RANK[b]);
+  return [...set].sort(compareTier);
 }
 
 /** The content (non-reserved) keys of a document. */
@@ -242,13 +275,17 @@ function contentOf(doc: ToiDocument): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   const record = doc as Record<string, unknown>;
   for (const key of Object.keys(record)) {
-    if (!key.startsWith("$")) out[key] = record[key];
+    if (!key.startsWith(TOI_RESERVED_PREFIX)) out[key] = record[key];
   }
   return out;
 }
 
-/** Flatten objects to dotted leaf paths; arrays and scalars are atomic leaves. */
+/**
+ * Flatten objects to dotted leaf paths; arrays and scalars are atomic leaves.
+ * An `undefined` value is "not stated" and is skipped, as `resolveToi` skips it.
+ */
 function collectLeaves(value: unknown, prefix: string, into: Map<string, unknown>): void {
+  if (value === undefined) return;
   if (isPlainObject(value)) {
     for (const key of Object.keys(value)) {
       collectLeaves(value[key], prefix ? `${prefix}.${key}` : key, into);
@@ -262,10 +299,12 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** Atomic-leaf equality. Leaves are scalars or arrays, so a stable JSON compare suffices. */
+/**
+ * Atomic-leaf equality, using the `.toi` canonical form (RFC 8785): object key
+ * order does not matter, and a boolean never equals a number.
+ */
 function equalLeaf(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  return JSON.stringify(a) === JSON.stringify(b);
+  return canonicalize(a) === canonicalize(b);
 }
 
 function parseJson(input: string): unknown {

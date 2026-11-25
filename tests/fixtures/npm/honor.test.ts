@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { generateKeyPair, signToi, ToiValidationError } from "@neurolift-technologies/toi";
 import { detectConflicts, honor, parseCharter, propagate } from "../src/index.js";
 import type { ToiDocument } from "../src/index.js";
 
@@ -118,5 +119,52 @@ describe("parseCharter", () => {
 
   it("rejects a charter missing $otoi", () => {
     expect(() => parseCharter({ agents: [] })).toThrow(/Invalid .otoi charter/);
+  });
+});
+
+// `.otoi` consumes `@neurolift-technologies/toi`: `.toi` validation, equality,
+// and signature checks come from that package, not from a local copy.
+describe("consumes the @neurolift-technologies/toi APIs", () => {
+  const withRules = (rules: unknown): ToiDocument =>
+    ({ $toi: "1.0.0", $tier: "project", identity: { author: "team" }, custom: { rules } }) as ToiDocument;
+
+  it("compares leaves canonically, so key order alone is not a conflict", () => {
+    const a = withRules([{ id: 1, mode: "strict" }]);
+    const b = withRules([{ mode: "strict", id: 1 }]);
+    expect(detectConflicts([a, b])).toEqual([]);
+  });
+
+  it("treats a boolean and a number as different values", () => {
+    expect(detectConflicts([withRules(true), withRules(1)])).toHaveLength(1);
+  });
+
+  it("treats an undefined leaf as not stated, as resolveToi does", () => {
+    expect(detectConflicts([withRules(undefined), withRules(["a"])])).toEqual([]);
+  });
+
+  it("validates host-supplied documents with parseToi", async () => {
+    const invalid = { $toi: "not-semver", $tier: "personal", identity: { author: "x" } } as unknown as ToiDocument;
+    await expect(honor(charter, { documents: [invalid] })).rejects.toThrow(ToiValidationError);
+  });
+
+  it("rejects a host-supplied document whose signature does not verify", async () => {
+    const signed = signToi(personal, generateKeyPair().privateKey);
+    const tampered = { ...signed, communication: { tone: "friendly" } } as ToiDocument;
+    await expect(honor(charter, { documents: [tampered] })).rejects.toThrow(/signature/);
+  });
+
+  it("rejects a charter source whose signature does not verify", async () => {
+    const signed = signToi(personal, generateKeyPair().privateKey);
+    const tampered = { ...signed, communication: { tone: "friendly" } };
+    const withSource = { $otoi: "1.0.0", toi_sources: [{ tier: "personal", inline: tampered }] };
+    await expect(honor(withSource, {})).rejects.toThrow(/signature/);
+  });
+
+  it("honors correctly signed documents from both the charter and the host", async () => {
+    const { privateKey } = generateKeyPair();
+    const withSource = { $otoi: "1.0.0", toi_sources: [{ tier: "personal", inline: signToi(personal, privateKey) }] };
+    const policy = await honor(withSource, { documents: [signToi(project, privateKey)] });
+    expect(policy.effective.communication?.tone).toBe("direct");
+    expect(policy.effective.communication?.verbosity).toBe("concise");
   });
 });
