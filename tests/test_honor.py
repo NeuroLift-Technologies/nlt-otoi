@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 
 import pytest
+from nlt_toi import ToiValidationError, generate_key_pair, sign_toi
 
 from nlt_otoi import (
     HonorOptions,
@@ -164,3 +165,49 @@ class TestParseCharter:
     def test_rejects_charter_missing_otoi(self):
         with pytest.raises(Exception, match=r"Invalid .otoi charter"):
             parse_charter({"agents": []})
+
+
+def _with_rules(rules) -> ToiDocument:
+    return {"$toi": "1.0.0", "$tier": "project", "identity": {"author": "team"}, "custom": {"rules": rules}}
+
+
+class TestConsumesToiApis:
+    """``.otoi`` consumes ``nlt_toi``: ``.toi`` validation, equality, and
+    signature checks come from that package, not from a local copy. Mirrors the
+    "consumes the @neurolift-technologies/toi APIs" block of the npm suite."""
+
+    def test_compares_leaves_canonically_so_key_order_is_not_a_conflict(self):
+        a = _with_rules([{"id": 1, "mode": "strict"}])
+        b = _with_rules([{"mode": "strict", "id": 1}])
+        assert detect_conflicts([a, b]) == []
+
+    def test_treats_a_boolean_and_a_number_as_different_values(self):
+        assert len(detect_conflicts([_with_rules(True), _with_rules(1)])) == 1
+
+    def test_validates_host_supplied_documents_with_parse_toi(self):
+        invalid = {"$toi": "not-semver", "$tier": "personal", "identity": {"author": "x"}}
+        with pytest.raises(ToiValidationError):
+            honor(charter, HonorOptions(documents=[invalid]))
+
+    def test_rejects_host_supplied_document_whose_signature_does_not_verify(self):
+        signed = sign_toi(personal, generate_key_pair().private_key)
+        tampered = {**signed, "communication": {"tone": "friendly"}}
+        with pytest.raises(Exception, match=r"signature"):
+            honor(charter, HonorOptions(documents=[tampered]))
+
+    def test_rejects_charter_source_whose_signature_does_not_verify(self):
+        signed = sign_toi(personal, generate_key_pair().private_key)
+        tampered = {**signed, "communication": {"tone": "friendly"}}
+        with_source = {"$otoi": "1.0.0", "toi_sources": [{"tier": "personal", "inline": tampered}]}
+        with pytest.raises(Exception, match=r"signature"):
+            honor(with_source, HonorOptions())
+
+    def test_honors_correctly_signed_documents_from_charter_and_host(self):
+        private_key = generate_key_pair().private_key
+        with_source = {
+            "$otoi": "1.0.0",
+            "toi_sources": [{"tier": "personal", "inline": sign_toi(personal, private_key)}],
+        }
+        policy = honor(with_source, HonorOptions(documents=[sign_toi(project, private_key)]))
+        assert policy.effective["communication"]["tone"] == "direct"
+        assert policy.effective["communication"]["verbosity"] == "concise"

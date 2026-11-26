@@ -16,9 +16,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `README.md`, `CONTRIBUTING.md`, and `packages/otoi/README.md` now clarify the
   root MIT license source of truth and package/dependency license boundaries.
   (#37, #38)
+- `.otoi` now consumes the `.toi` package for everything about the `.toi`
+  format instead of keeping local copies, in both the npm and Python ports:
+  `canonicalize` for leaf equality, `compareTier` for tier order, and
+  `TOI_RESERVED_PREFIX` for reserved keys.
+- `honor()` now validates host-supplied `options.documents` with `parseToi`
+  (Python: `parse_toi`), the same as charter sources. An invalid host document
+  now throws `ToiValidationError` instead of entering the effective policy.
+- `honor()` now rejects any signed document whose `$signature` fails
+  `verifyToi` (Python: `verify_toi`) with `OtoiHonorError`. Unsigned documents
+  are accepted as before.
+- `@neurolift-technologies/toi` dependency range raised from `>=1.0.0` to
+  `>=1.0.1`: npm `toi` 1.0.0 shipped without `dist/` and cannot be loaded, and
+  1.0.1 is the first package release with every API `.otoi` consumes. This is a
+  package-version floor; the `.toi` format version is still `1.0.0`.
 
 ### Fixed
-- N/A
+- npm: `detectConflicts` reported a conflict, and `on_conflict: "reject"` threw,
+  for identical values whose object keys were in a different order.
+- Python: `detect_conflicts` missed a real conflict between a boolean and a
+  number (`True == 1` in Python); the two ports now agree.
+- npm: an `undefined` leaf is now treated as not stated, matching `resolveToi`,
+  instead of conflicting with a stated value.
 
 ---
 

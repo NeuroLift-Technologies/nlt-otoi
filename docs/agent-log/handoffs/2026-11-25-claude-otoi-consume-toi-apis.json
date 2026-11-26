@@ -1,0 +1,53 @@
+{
+  "handoff_record": {
+    "session_id": "claude-nlt-otoi-consume-toi-apis-2026-11-25",
+    "agent_name": "Claude",
+    "date": "2026-11-25",
+    "otoi_version": "ORG-DEV-OTOI-1.0.2",
+    "repo": "NeuroLift-Technologies/nlt-otoi",
+    "branch": "ccr-7a1dfdaf-cxo6zh",
+    "work_completed": [
+      "Verified the supplied probe against npm otoi 1.2.0, a build of main, and PyPI nlt-otoi 1.2.0: an inline personal source in a charter overrides the host's personal document, and the SPEC section 7 privacy floor is not implemented.",
+      "Made both ports consume the toi package's APIs: canonicalize for leaf equality, parseToi on host documents, isSigned and verifyToi on signed documents, compareTier, and TOI_RESERVED_PREFIX.",
+      "Fixed two leaf-equality bugs: npm false conflicts on key order, and Python missing true vs 1 conflicts.",
+      "Raised the @neurolift-technologies/toi range to >=1.0.1 (package version; the .toi format version stays 1.0.0)."
+    ],
+    "work_in_progress": [
+      "Draft PR review"
+    ],
+    "blockers": [],
+    "decisions_made": [
+      "Unsigned documents are still accepted; only a present $signature that fails verifyToi is rejected.",
+      "An undefined leaf is treated as not stated in conflict detection, matching resolveToi.",
+      "No package version bump in this PR; validating host documents suggests a minor release."
+    ],
+    "decisions_pending": [
+      "Same-tier override by an unsigned inline personal charter source: put host documents first, require signatures for personal charter sources, or both.",
+      "SPEC section 7 privacy floor: pick the most restrictive value on same-tier privacy disagreement, or fail closed.",
+      "Whether to use toi DEFAULT_DOCUMENT as default platformDefaults; Python nlt-toi 1.0.0 lacks it, so it would need adding there first.",
+      "SPEC section 8 wording that names npm package version 1.0.1 inside a format-level rule.",
+      "npm otoi 1.2.0 was published from 8337a9c, a pre-squash commit of PR #43 on no branch, without a provenance attestation."
+    ],
+    "escalations": [],
+    "next_agent_notes": "The original override still reproduces after this PR because the injected document is unsigned; that is intended until Joshua decides the pending items. The asfdk packages re-export otoi and will pick up a release through their version ranges. asfdk separately has an unreleased crisis-routing fix (asfdk #41).",
+    "files_modified": [
+      "CHANGELOG.md",
+      "packages/otoi/package.json",
+      "packages/otoi/src/honor.ts",
+      "packages/otoi/test/honor.test.ts",
+      "src/nlt_otoi/honor.py",
+      "tests/fixtures/npm/honor.test.ts",
+      "tests/test_honor.py",
+      "docs/active-threads.md",
+      "docs/agent-log/registrations/2026-11-25-claude-otoi-consume-toi-apis.json",
+      "docs/agent-log/handoffs/2026-11-25-claude-otoi-consume-toi-apis.json"
+    ],
+    "tests_run": [
+      "Governance validation and git diff --check",
+      "29 npm tests and type check, against toi 1.0.3 and toi 1.0.1",
+      "44 Python tests, including the conformance suite"
+    ],
+    "tests_passing": true,
+    "pr_url": "https://github.com/NeuroLift-Technologies/nlt-otoi/pull/53"
+  }
+}

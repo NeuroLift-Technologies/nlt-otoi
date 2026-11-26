@@ -1,11 +1,15 @@
 """The ``.otoi`` honoring layer.
 
 This is what makes ``.otoi`` more than a second copy of ``.toi``: it consumes the
-canonical ``nlt_toi`` primitives (``parse_toi``, ``resolve_toi``) to turn a
-charter plus a stack of ``.toi`` documents into one **effective interaction
-policy** that every agent in the mesh honors — and it adds the orchestration
-concerns the ``.toi`` standard deliberately leaves out: same-tier conflict
-detection, enforcement modes, and per-agent propagation.
+canonical ``nlt_toi`` package to turn a charter plus a stack of ``.toi``
+documents into one **effective interaction policy** that every agent in the mesh
+honors. Everything about the ``.toi`` format itself — validation
+(``parse_toi``), signatures (``is_signed``, ``verify_toi``), value equality
+(``canonicalize``), tier order (``compare_tier``, ``resolve_toi``), and the
+reserved key prefix — comes from that package rather than a local copy. This
+module adds only the orchestration concerns the ``.toi`` standard deliberately
+leaves out: same-tier conflict detection, enforcement modes, and per-agent
+propagation.
 
 Ported faithfully from ``@neurolift-technologies/otoi`` ``src/honor.ts``. The
 reference ``honor`` is ``async`` only to await an I/O-bound ``loadSource``; this
@@ -16,9 +20,19 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from functools import cmp_to_key
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
-from nlt_toi import TIER_RANK, ToiDocument, parse_toi, resolve_toi
+from nlt_toi import (
+    TOI_RESERVED_PREFIX,
+    ToiDocument,
+    canonicalize,
+    compare_tier,
+    is_signed,
+    parse_toi,
+    resolve_toi,
+    verify_toi,
+)
 
 from .compat import assert_toi_compatible
 from .constants import (
@@ -59,8 +73,9 @@ _DEFAULT_ENFORCEMENT = ResolvedEnforcement(
 class HonorOptions:
     """Options for :func:`honor`."""
 
-    #: Already-parsed ``.toi`` documents to fold in alongside the charter's
-    #: sources.
+    #: ``.toi`` documents to fold in alongside the charter's sources. Each is
+    #: validated with ``parse_toi`` and, if signed, checked with ``verify_toi``,
+    #: exactly like a charter source.
     documents: Optional[Sequence[ToiDocument]] = None
     #: Lowest-precedence fallback values, applied only where nothing else set a
     #: field.
@@ -146,9 +161,13 @@ def honor(input: Any, options: Optional[HonorOptions] = None) -> EffectivePolicy
     Raises:
         OtoiCompatibilityError: when the installed ``nlt_toi`` declares no valid
             format version (a broken or pre-``1.0.0`` install).
+        ToiParseError, ToiValidationError: when a charter source or a host
+            document in ``options.documents`` is not a valid ``.toi`` document
+            (``parse_toi``).
         OtoiHonorError: when there is nothing to resolve, when a ``uri`` source
-            is present without a ``load_source``, or when a same-tier conflict is
-            found under ``on_conflict="reject"``.
+            is present without a ``load_source``, when a signed document's
+            ``$signature`` does not verify (``verify_toi``), or when a same-tier
+            conflict is found under ``on_conflict="reject"``.
     """
     if options is None:
         options = HonorOptions()
@@ -236,11 +255,30 @@ def _gather_documents(charter: OtoiCharter, options: HonorOptions) -> List[ToiDo
                 f'toi_source declares tier "{source["tier"]}" but its {origin} '
                 f'has $tier "{doc["$tier"]}"'
             )
+        _assert_signature_verifies(
+            doc,
+            f'uri "{source["uri"]}"' if source.get("uri") is not None else "inline toi_source",
+        )
         docs.append(doc)
 
-    for doc in options.documents or []:
+    # Host-supplied documents get the same ``.toi`` validation and signature
+    # check as charter sources: there is one validator for the ``.toi`` shape.
+    for index, raw in enumerate(options.documents or []):
+        doc = parse_toi(raw)
+        _assert_signature_verifies(doc, f"options.documents[{index}]")
         docs.append(doc)
     return docs
+
+
+def _assert_signature_verifies(doc: ToiDocument, origin: str) -> None:
+    """A signed document must verify. Unsigned documents are accepted, as
+    before; a ``$signature`` that is present but does not verify means the
+    document was altered after signing (or signed with a malformed envelope),
+    so fail closed."""
+    if is_signed(doc) and not verify_toi(doc):
+        raise OtoiHonorError(
+            f"The $signature on {origin} does not verify; the document may have been altered"
+        )
 
 
 def _resolve_enforcement(e: Optional[OtoiEnforcement]) -> ResolvedEnforcement:
@@ -259,12 +297,12 @@ def _coalesce(value, default):
 
 def _unique_tiers_by_precedence(docs: Sequence[ToiDocument]) -> List[str]:
     tiers = {doc["$tier"] for doc in docs}
-    return sorted(tiers, key=lambda t: TIER_RANK[t])
+    return sorted(tiers, key=cmp_to_key(compare_tier))
 
 
 def _content_of(doc: ToiDocument) -> Dict[str, Any]:
     """The content (non-reserved) keys of a document."""
-    return {k: v for k, v in doc.items() if not k.startswith("$")}
+    return {k: v for k, v in doc.items() if not k.startswith(TOI_RESERVED_PREFIX)}
 
 
 def _collect_leaves(value: Any, prefix: str, into: Dict[str, Any]) -> None:
@@ -282,17 +320,10 @@ def _is_plain_object(value: Any) -> bool:
 
 
 def _equal_leaf(a: Any, b: Any) -> bool:
-    """Atomic-leaf equality. Leaves are scalars or arrays, so a stable JSON
-    compare suffices."""
-    if a is b or a == b:
-        return True
-    return _stable_json(a) == _stable_json(b)
-
-
-def _stable_json(value: Any) -> str:
-    # Mirror JSON.stringify: compact separators, keys in insertion order
-    # (objects compared here are arrays/scalars, so key order is irrelevant).
-    return json.dumps(value, separators=(",", ":"), ensure_ascii=False)
+    """Atomic-leaf equality, using the ``.toi`` canonical form (RFC 8785):
+    object key order does not matter, and a boolean never equals a number
+    (Python's ``True == 1`` would otherwise hide a real conflict)."""
+    return canonicalize(a) == canonicalize(b)
 
 
 def _parse_json(text: str) -> Any:
