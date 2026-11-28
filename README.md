@@ -41,6 +41,14 @@ The TOI/OTOI Framework forms the governance foundation of the Solidarity Framewo
 
 ## About this repository
 
+### NeuroLift OTOI Framework
+
+**OTOI — Orchestrated Terms of Interaction**
+
+Open framework for human-controlled AI collaboration. The layer that makes TOI actionable. In single-agent contexts, OTOI operationalizes the user's TOI. In multi-agent contexts, OTOI orchestrates how that TOI is honored across agents, tools, memory, handoffs, and escalation.
+
+---
+
 ### 📦 Published Packages
 
 This repository publishes two reference implementations of the OTOI honoring layer, version-locked at **1.2.0**:

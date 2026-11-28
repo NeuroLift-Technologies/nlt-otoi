@@ -39,6 +39,25 @@ The TOI/OTOI Framework forms the governance foundation of the Solidarity Framewo
 **We're Not Competing. We're Completing.**
 **Human & AI Solidarity Without Singularity.**
 
+## About this package
+
+### `@neurolift-technologies/otoi`
+
+Reference implementation of the **`.otoi` (Orchestrated Terms of Interaction)**
+honoring layer — the multi-agent orchestration standard built on top of the
+canonical [`@neurolift-technologies/toi`](https://www.npmjs.com/package/@neurolift-technologies/toi) file
+type.
+
+> A `.toi` document states **a person's** interaction preferences.
+> An `.otoi` charter declares **how a mesh of agents honors** a stack of those
+> documents at runtime: which agents are bound, how the `.toi` stack resolves,
+> and what happens on conflict or on an unsupported preference.
+
+This package **consumes** `@neurolift-technologies/toi` rather than re-implementing it. The
+`.toi` shape, tiers, resolution semantics, canonicalization, and signatures all
+remain the property of the `.toi` standard; `.otoi` adds only the orchestration
+concerns the `.toi` spec deliberately leaves out.
+
 ## Install
 
 ```bash
